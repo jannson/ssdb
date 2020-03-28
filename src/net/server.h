@@ -64,6 +64,8 @@ public:
 	static NetworkServer* init(const char *conf_file, int num_readers=-1, int num_writers=-1);
 	static NetworkServer* init(const Config &conf, int num_readers=-1, int num_writers=-1);
 	void serve();
+  void set_readonly(bool b);
+  bool get_readonly();
 };
 
 

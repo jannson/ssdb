@@ -14,6 +14,8 @@ found in the LICENSE file.
 
 static DEF_PROC(ping);
 static DEF_PROC(info);
+static DEF_PROC(set_readonly);
+static DEF_PROC(get_readonly);
 static DEF_PROC(auth);
 static DEF_PROC(list_allow_ip);
 static DEF_PROC(add_allow_ip);
@@ -63,6 +65,8 @@ NetworkServer::NetworkServer(){
 
 	// add built-in procs, can be overridden
 	proc_map.set_proc("ping", "r", proc_ping);
+	proc_map.set_proc("set_readonly", "r", proc_set_readonly);
+	proc_map.set_proc("get_readonly", "r", proc_get_readonly);
 	proc_map.set_proc("info", "r", proc_info);
 	proc_map.set_proc("auth", "r", proc_auth);
 	proc_map.set_proc("list_allow_ip", "r", proc_list_allow_ip);
@@ -337,6 +341,14 @@ void NetworkServer::serve(){
 	}
 }
 
+void NetworkServer::set_readonly(bool b){
+  this->readonly=b;
+}
+
+bool NetworkServer::get_readonly(){
+  return this->readonly;
+}
+
 Link* NetworkServer::accept_link(){
 	Link *link = serv_link->accept();
 	if(link == NULL){
@@ -522,6 +534,36 @@ int NetworkServer::proc(ProcJob *job){
 
 static int proc_ping(NetworkServer *net, Link *link, const Request &req, Response *resp){
 	resp->push_back("ok");
+	return 0;
+}
+
+static int proc_set_readonly(NetworkServer *net, Link *link, const Request &req, Response *resp){
+	if(req.size() != 2){
+    resp->push_back("client_error");
+	}else{
+    if (req[1] == "yes") {
+      net->set_readonly(true);
+      resp->push_back("ok");
+      resp->push_back("1");
+    } else if (req[1] == "no") {
+      net->set_readonly(false);
+      resp->push_back("ok");
+      resp->push_back("0");
+    } else {
+      resp->push_back("client_error");
+    }
+  }
+	return 0;
+}
+
+static int proc_get_readonly(NetworkServer *net, Link *link, const Request &req, Response *resp){
+  if(net->get_readonly()) {
+    resp->push_back("ok");
+    resp->push_back("1");
+  } else {
+    resp->push_back("ok");
+    resp->push_back("0");
+  }
 	return 0;
 }
 
